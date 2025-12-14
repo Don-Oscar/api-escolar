@@ -36,6 +36,34 @@ const UsuarioSchema = new mongoose.Schema({
 });
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 
+// 1. MODELO DE CURSO
+const CursoSchema = new mongoose.Schema({
+    nombre: String,
+    horario: String,
+    profesorEmail: String, // <--- Esto vincula el curso contigo
+    codigo: String
+});
+const Curso = mongoose.model('Curso', CursoSchema);
+
+// 2. RUTA PARA VER MIS CURSOS (Dashboard)
+app.get('/api/cursos/:email', async (req, res) => {
+    try {
+        const emailProfesor = req.params.email;
+        // Busca cursos donde el profesor sea el dueño
+        const cursos = await Curso.find({ profesorEmail: emailProfesor });
+        res.json(cursos);
+    } catch (error) {
+        res.status(500).json({ error: "Error obteniendo cursos" });
+    }
+});
+
+// 3. RUTA RÁPIDA PARA CREAR CURSOS (Úsala con Postman una vez)
+app.post('/api/crear-curso', async (req, res) => {
+    const nuevo = new Curso(req.body);
+    await nuevo.save();
+    res.json(nuevo);
+});
+
 // ==========================================
 //                RUTAS
 // ==========================================
