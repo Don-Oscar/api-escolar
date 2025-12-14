@@ -59,14 +59,23 @@ app.get('/api/cursos/:email', async (req, res) => {
 
 // 3. RUTA RÁPIDA PARA CREAR CURSOS (Úsala con Postman una vez)
 app.post('/api/crear-curso', async (req, res) => {
-    const nuevo = new Curso(req.body);
-    await nuevo.save();
-    res.json(nuevo);
+    try {
+        const nuevoCurso = new Curso(req.body);
+        await nuevoCurso.save();
+        res.json({ mensaje: "Curso creado exitosamente", curso: nuevoCurso });
+    } catch (error) {
+        res.status(500).json({ error: "Error creando curso" });
+    }
 });
-
-// ==========================================
-//                RUTAS
-// ==========================================
+app.get('/api/cursos/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        const cursos = await Curso.find({ profesorEmail: email });
+        res.json(cursos);
+    } catch (error) {
+        res.status(500).json({ error: "Error obteniendo cursos" });
+    }
+});
 
 app.get('/', (req, res) => {
     res.send("¡Hola! La API de la Escuela está funcionando 🚀");
