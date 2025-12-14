@@ -21,7 +21,8 @@ mongoose.connect(MONGO_URI)
 const EstudianteSchema = new mongoose.Schema({
     nombre: String,
     curso: String,
-    asistencias: Number,
+    asistencias: { type: Number, default: 0 }, // Clases a las que fue
+    total_clases: { type: Number, default: 0 }, // <--- AGREGA ESTO (Clases dictadas)
     fecha: { type: Date, default: Date.now }
 });
 const Estudiante = mongoose.model('Estudiante', EstudianteSchema);
@@ -107,4 +108,37 @@ app.get('/api/ver-estudiantes', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🤖 Servidor listo en puerto ${PORT}`);
+});
+// RUTA: MARCAR ASISTENCIA (Actualiza los contadores)
+app.post('/api/marcar-asistencia', async (req, res) => {
+    const { estudianteId, estaPresente } = req.body; // Android envía esto
+
+    try {
+        // 1. Buscamos al estudiante
+        const estudiante = await Estudiante.findById(estudianteId);
+        
+        if (!estudiante) {
+            return res.status(404).json({ error: "Estudiante no encontrado" });
+        }
+
+        // 2. LÓGICA DE NEGOCIO:
+        // Siempre aumentamos el total de clases porque la clase ocurrió.
+        estudiante.total_clases += 1;
+
+        // Solo aumentamos 'asistencias' si el checkbox estaba marcado (true)
+        if (estaPresente) {
+            estudiante.asistencias += 1;
+        }
+
+        // 3. Guardamos el cambio
+        await estudiante.save();
+
+        res.json({ 
+            mensaje: "Asistencia actualizada", 
+            nuevo_porcentaje: (estudiante.asistencias / estudiante.total_clases) * 100 
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: "Error al marcar asistencia" });
+    }
 });
