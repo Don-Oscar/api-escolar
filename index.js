@@ -83,34 +83,46 @@ app.get('/', (req, res) => {
 
 // --- RUTA NUEVA: LOGIN ---
 // Esta es la que usará tu LoginScreen.kt modificado
+// BUSCA ESTA PARTE EN TU index.js Y REEMPLÁZALA:
+
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(`🔐 Intentando login: ${email}`);
+        const usuario = await Usuario.findOne({ email });
 
-        // Buscar usuario en la base de datos
-        const usuario = await Usuario.findOne({ email: email });
-
-        // Validaciones básicas
+        // ❌ CASO 1: Usuario no existe
         if (!usuario) {
-            return res.status(404).json({ error: "Usuario no encontrado" });
-        }
-        if (usuario.password !== password) {
-            return res.status(401).json({ error: "Contraseña incorrecta" });
+            return res.json({ 
+                status: "error", 
+                message: "El usuario no existe", 
+                rol: null 
+            });
         }
 
-        // ¡ÉXITO! Devolvemos los datos y EL ROL importante
+        // ❌ CASO 2: Contraseña incorrecta (Asumiendo que comparas simple o con bcrypt)
+        if (usuario.password !== password) { 
+            return res.json({ 
+                status: "error", 
+                message: "Contraseña incorrecta", 
+                rol: null 
+            });
+        }
+
+        // ✅ CASO 3: ÉXITO TOTAL
         res.json({
-            mensaje: "Login exitoso",
+            status: "success",      // <--- LA CLAVE QUE BUSCA LA APP
+            message: "Login exitoso", // <--- EL MENSAJE QUE BUSCA LA APP
+            rol: usuario.rol,       // <--- IMPORTANTE PARA SABER SI ES PROFE
             userId: usuario._id,
-            nombre: usuario.nombre,
-            rol: usuario.rol, // <--- ESTO ES LO QUE LEERÁ TU APP ANDROID
-            token: "token_simulado_123" 
+            nombre: usuario.nombre
         });
 
     } catch (error) {
-        console.error("Error en login:", error);
-        res.status(500).json({ error: "Error en el servidor" });
+        res.status(500).json({ 
+            status: "error", 
+            message: "Error en el servidor", 
+            rol: null 
+        });
     }
 });
 
