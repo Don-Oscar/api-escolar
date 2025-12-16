@@ -152,7 +152,28 @@ app.get('/api/ver-estudiantes', async (req, res) => {
     const lista = await Estudiante.find();
     res.json(lista);
 });
+// RUTA PARA ACTUALIZAR ASISTENCIAS
+app.put('/api/estudiantes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { asistencias } = req.body; // Recibimos el nuevo número total
 
+    // Buscamos al estudiante y actualizamos solo el campo 'asistencias'
+    const estudianteActualizado = await Estudiante.findByIdAndUpdate(
+      id,
+      { asistencias: asistencias },
+      { new: true } // Para que nos devuelva el dato actualizado
+    );
+
+    if (!estudianteActualizado) {
+      return res.status(404).json({ message: 'Estudiante no encontrado' });
+    }
+
+    res.json(estudianteActualizado);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar', error });
+  }
+});
 // --- ENCENDER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
